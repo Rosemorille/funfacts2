@@ -4,9 +4,9 @@ Created on Mon Jun  2 14:14:35 2025
 
 @author: rosem
 """
-
 from flask import Flask, request, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.ext.mutable import MutableDict
 import os
 
 app = Flask(__name__)
@@ -17,10 +17,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # --- Database Model ---
+
 class User(db.Model):
     username = db.Column(db.String(80), primary_key=True)
     password = db.Column(db.String(120), nullable=False)
-    liked_facts = db.Column(db.JSON, default={})
+    liked_facts = db.Column(MutableDict.as_mutable(db.JSON), default={})
 
 # --- Initialize DB ---
 with app.app_context():
@@ -65,12 +66,10 @@ def get_liked_facts(username):
     if user:
         return jsonify({"liked_facts": user.liked_facts or {}}), 200
     return jsonify({"liked_facts": {}}), 404
-
-
+    
 @app.route("/like_fact", methods=["POST"])
 def like_fact():
     data = request.get_json()
-    print("Données reçues dans /like_fact :", data) 
     username = data.get("username")
     category = data.get("category")
     fact = data.get("fact")
@@ -86,19 +85,9 @@ def like_fact():
         user.liked_facts[category] = []
 
     if fact not in user.liked_facts[category]:
-        # Modifier une copie du dictionnaire
-        liked = dict(user.liked_facts or {})
-        
-        if category not in liked:
-            liked[category] = []
-        
-        if fact not in liked[category]:
-            liked[category].append(fact)
-        
-        # Réassigner pour forcer SQLAlchemy à détecter le changement
-        user.liked_facts = liked
-        print("Sauvegarde dans la base :", user.username, user.liked_facts)
+        user.liked_facts[category].append(fact)
         db.session.commit()
+        print("Fact ajouté :", user.liked_facts)
         return jsonify({"status": "success"}), 200
     else:
         return jsonify({"status": "exists"}), 409
