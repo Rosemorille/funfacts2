@@ -55,7 +55,7 @@ def login():
     user = User.query.get(username)
     if user and user.password == password:
         session['username'] = username
-        return jsonify({"status": "success", "message": "Login successful"}), 200
+        return jsonify({"status": "success"}), 200
 
     return jsonify({"status": "fail", "message": "Invalid credentials"}), 401
 
