@@ -81,13 +81,13 @@ def like_fact():
     if user.liked_facts is None:
         user.liked_facts = {}
 
-    if category not in user.liked_facts:
-        user.liked_facts[category] = []
+    # 🛠️ Création ou récupération de la liste de facts pour cette catégorie
+    facts_list = user.liked_facts.get(category, [])
 
-    if fact not in user.liked_facts[category]:
-        user.liked_facts[category].append(fact)
+    if fact not in facts_list:
+        facts_list.append(fact)
+        user.liked_facts[category] = facts_list  # 👈 réaffecte la catégorie mise à jour
         db.session.commit()
-        print("Fact ajouté :", user.liked_facts)
         return jsonify({"status": "success"}), 200
     else:
         return jsonify({"status": "exists"}), 409
