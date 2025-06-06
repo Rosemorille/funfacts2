@@ -70,6 +70,7 @@ def get_liked_facts(username):
 @app.route("/like_fact", methods=["POST"])
 def like_fact():
     data = request.get_json()
+    print("Données reçues dans /like_fact :", data) 
     username = data.get("username")
     category = data.get("category")
     fact = data.get("fact")
