@@ -86,7 +86,18 @@ def like_fact():
         user.liked_facts[category] = []
 
     if fact not in user.liked_facts[category]:
-        user.liked_facts[category].append(fact)
+        # Modifier une copie du dictionnaire
+        liked = dict(user.liked_facts or {})
+        
+        if category not in liked:
+            liked[category] = []
+        
+        if fact not in liked[category]:
+            liked[category].append(fact)
+        
+        # Réassigner pour forcer SQLAlchemy à détecter le changement
+        user.liked_facts = liked
+        print("Sauvegarde dans la base :", user.username, user.liked_facts)
         db.session.commit()
         return jsonify({"status": "success"}), 200
     else:
